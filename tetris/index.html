@@ -33,12 +33,11 @@
         tetrisBlockBox = [];
         for (i = 0; i < 20; ++i) {
           tetrisBlockBox.push(new Array(10));
-          for (j = 0; j < 10; ++j) tetrisBlockBox[i][j] = 0;
+          for (j = 0; j < 10; ++j) tetrisBlockBox[i][j] = {'fill':0, 'color':'#ccc'};
         }
       }
 
       var tetrisBlock;
-      var tetrisBlockThis;
 
       // 블럭 타입 init
       function tetrisBlockInit() {
@@ -130,7 +129,7 @@
             checkX < 0 ||
             checkX >= 10 ||
             checkY >= 20 ||
-            tetrisBlockBox[checkY][checkX] != 0
+            tetrisBlockBox[checkY][checkX].fill != 0
           )
             return true;
         }
@@ -149,19 +148,21 @@
             for (k = 0; k < size; k += 2) {
               checkY = tetrisBlockY + tetrisBlockThis[k];
               checkX = tetrisBlockX + tetrisBlockThis[k + 1];
-              tetrisBlockBox[checkY][checkX] = 1;
+              tetrisBlockBox[checkY][checkX].fill = 1;
+              tetrisBlockBox[checkY][checkX].color = getColor();
             }
             for (i = 0; i < 20; ++i) {
               sum = 0;
               for (j = 0; j < 10; ++j) {
-                if (tetrisBlockBox[i][j] != 0) {
+                if (tetrisBlockBox[i][j].fill != 0) {
                   sum++;
                 }
               }
               if (sum == 10) {
                 for (k = i; k > 0; --k) {
                   for (j = 0; j < 10; ++j) {
-                    tetrisBlockBox[k][j] = tetrisBlockBox[k - 1][j];
+                    tetrisBlockBox[k][j].fill = tetrisBlockBox[k - 1][j].fill;
+                    tetrisBlockBox[k][j].color = tetrisBlockBox[k - 1][j].color;
                   }
                 }
                 score += 10;
@@ -259,18 +260,14 @@
         //블럭 표시
         for (i = 0; i < 20; ++i) {
           for (j = 0; j < 10; ++j) {
-            if (tetrisBlockBox[i][j] == 0) {
-              ctx.fillStyle = '#ccc';
-            } else {
-              ctx.fillStyle = 'green';
-            }
+            ctx.fillStyle = tetrisBlockBox[i][j].color;
             var size = tetrisBlockThis.length;
             for (k = 0; k < size; k += 2) {
               if (
                 tetrisBlockY + tetrisBlockThis[k] == i &&
                 tetrisBlockX + tetrisBlockThis[k + 1] == j
               ) {
-                ctx.fillStyle = 'blue';
+                ctx.fillStyle = getColor();
               }
             }
             x = tetrisBlockLeft + j * tetrisBlockSize;
@@ -296,6 +293,26 @@
         e = e || window.event;
         onKeyDown(e);
       };
+
+      function getColor() {
+        switch (tetrisBlockNumber) {
+          case 0:
+            return '#9ebb0c';
+          case 1:
+            return '#9018ff';
+          case 2:
+            return '#3977cd';
+          case 3:
+            return '#67935c';
+          case 5:
+            return '#be7818';
+          case 6:
+            return '#e5506d';
+          case 4:
+            return '#18be96';
+        }
+      }
+
 
       init();
       setInterval(run, 100);
