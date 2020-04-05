@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <title></title>
+  </head>
+  <body>
+    <canvas id="canvas" width="800" height="600">
+      Canvas is not supported.
+    </canvas>
+    <script>
+      var isInit = false;
+      var canvas;
+      var ctx;
+
+      var mode = 1; // 1=게임중, 2=게임오버
+      const MODE_GAME = 1;
+      const MODE_GAMEOVER = 2;
+
+      var tetrisBlockSize = 25;
+      var tetrisBlockTop = 50;
+      var tetrisBlockLeft = 280;
+      var tetrisBlockBox;
+
+      var score;
+
+      var runEvent;
+      var runEventTime = 500;
+      var level = 1;
+      var exp = 0;
+
+      function tetrisBlockBoxInit() {
+        tetrisBlockBox = [];
+        for (i = 0; i < 20; ++i) {
+          tetrisBlockBox.push(new Array(10));
+          for (j = 0; j < 10; ++j) tetrisBlockBox[i][j] = 0;
+        }
+      }
+
+      var tetrisBlock;
+      var tetrisBlockThis;
+
+      // 블럭 타입 init
+      function tetrisBlockInit() {
+        tetrisBlock = [];
+        var tmp;
+        // 첫번째 블럭 (일자)
+        tmp = [];
+        tmp.push(0, 0);
+        tmp.push(0, 1);
+        tmp.push(0, 2);
+        tmp.push(0, 3);
+        tetrisBlock.push(tmp);
+
+        // 두번째 블럭(T)
+        tmp = [];
+        tmp.push(0, 0);
+        tmp.push(0, 1);
+        tmp.push(0, 2);
+        tmp.push(1, 1);
+        tetrisBlock.push(tmp);
+
+        //세번째 블럭(z)
+        tmp = [];
+        tmp.push(0, 0);
+        tmp.push(0, 1);
+        tmp.push(1, 1);
+        tmp.push(1, 2);
+        tetrisBlock.push(tmp);
+
+        //네번째 블럭(z반대)
+        tmp = [];
+        tmp.push(0, 1);
+        tmp.push(0, 2);
+        tmp.push(1, 0);
+        tmp.push(1, 1);
+        tetrisBlock.push(tmp);
+
+        //다섯번째 블럭(ㅁ)
+        tmp = [];
+        tmp.push(0, 0);
+        tmp.push(0, 1);
+        tmp.push(1, 0);
+        tmp.push(1, 1);
+        tetrisBlock.push(tmp);
+
+        //여섯번째 블럭(ㄱ반대)
+        tmp = [];
+        tmp.push(0, 0);
+        tmp.push(0, 1);
+        tmp.push(0, 2);
+        tmp.push(1, 0);
+        tetrisBlock.push(tmp);
+
+        //일곱번째 블럭(ㄱ)
+        tmp = [];
+        tmp.push(0, 0);
+        tmp.push(0, 1);
+        tmp.push(0, 2);
+        tmp.push(1, 2);
+        tetrisBlock.push(tmp);
+      }
+
+      var tetrisBlockNumber = 1;
+      var tetrisBlockX = 3;
+      var tetrisBlockY = 0;
+
+      function init() {
+        if (isInit == false) {
+          canvas = document.getElementById('canvas');
+          ctx = canvas.getContext('2d');
+          tetrisBlockInit();
+          tetrisBlockBoxInit();
+          tetrisBlockNumber = Math.floor(Math.random() * 6.9);
+          tetrisBlockThis = tetrisBlock[tetrisBlockNumber].slice();
+          score = 0;
+
+          isInit = true;
+        }
+      }
+
+      // 겹침검사
+      function checkConflict() {
+        var size = tetrisBlockThis.length;
+        for (k = 0; k < size; k += 2) {
+          checkY = tetrisBlockY + tetrisBlockThis[k];
+          checkX = tetrisBlockX + tetrisBlockThis[k + 1];
+          if (checkY < 0) continue;
+          if (
+            checkX < 0 ||
+            checkX >= 10 ||
+            checkY >= 20 ||
+            tetrisBlockBox[checkY][checkX] != 0
+          )
+            return true;
+        }
+        return false;
+      }
+
+      function run() {
+        if (checkConflict()) {
+          mode = MODE_GAMEOVER;
+        }
+        if (mode == MODE_GAME) {
+          tetrisBlockY++;
+          if (checkConflict()) {
+            tetrisBlockY--;
+            var size = tetrisBlockThis.length;
+            for (k = 0; k < size; k += 2) {
+              checkY = tetrisBlockY + tetrisBlockThis[k];
+              checkX = tetrisBlockX + tetrisBlockThis[k + 1];
+              tetrisBlockBox[checkY][checkX] = 1;
+            }
+            for (i = 0; i < 20; ++i) {
+              sum = 0;
+              for (j = 0; j < 10; ++j) {
+                if (tetrisBlockBox[i][j] != 0) {
+                  sum++;
+                }
+              }
+              if (sum == 10) {
+                for (k = i; k > 0; --k) {
+                  for (j = 0; j < 10; ++j) {
+                    tetrisBlockBox[k][j] = tetrisBlockBox[k - 1][j];
+                  }
+                }
+                score += 10;
+                exp++;
+                if (exp >= 10) {
+                  level++;
+                  exp = 0;
+                  runEventTime -= 50;
+                  clearInterval(runEvent);
+                  runEvent = setInterval(run, runEventTime);
+                }
+              }
+            }
+            tetrisBlockY = 0;
+            tetrisBlockX = 3;
+            tetrisBlockNumber = Math.floor(Math.random() * 6.9);
+            tetrisBlockThis = tetrisBlock[tetrisBlockNumber].slice();
+          }
+        }
+        onDraw();
+      }
+
+      function rotateBlock() {
+        switch (tetrisBlockNumber) {
+          case 0:
+          case 1:
+          case 2:
+          case 3:
+          case 5:
+          case 6:
+            centerY = 0;
+            centerX = 1;
+            break;
+          //ㅁ블럭은 회전없음
+          case 4:
+            return;
+        }
+        tetrisBlockSave = tetrisBlockThis.slice();
+        for (i = 0; i < tetrisBlockThis.length; i += 2) {
+          y = tetrisBlockThis[i + 1] - centerX;
+          x = -(tetrisBlockThis[i] - centerY);
+          tetrisBlockThis[i] = y + centerY;
+          tetrisBlockThis[i + 1] = x + centerX;
+        }
+        if (checkConflict()) {
+          tetrisBlockThis = tetrisBlockSave.slice();
+        }
+      }
+
+      // 키입력
+      function onKeyDown(e) {
+        if (mode == MODE_GAME) {
+          if (e.which == 37) {
+            // 왼쪽키
+            tetrisBlockX--;
+            if (checkConflict()) tetrisBlockX++;
+            else onDraw();
+          }
+          if (e.which == 39) {
+            // 오른쪽키
+            tetrisBlockX++;
+            if (checkConflict()) tetrisBlockX--;
+            else onDraw();
+          }
+          if (e.which == 40 || e.which == 32) {
+            // 아래쪽키, 스페이스키
+            tetrisBlockY++;
+            if (checkConflict()) tetrisBlockY--;
+            else onDraw();
+          }
+          if (e.which == 38) {
+            // 위쪽키(회전)
+            rotateBlock();
+            onDraw();
+          }
+        } else if (mode == MODE_GAMEOVER) {
+          //Enter키 누르면 재시작
+          if (e.which == 13) {
+            tetrisBlockInit();
+            tetrisBlockNumber = Math.floor(Math.random() * 6.9);
+            tetrisBlockThis = tetrisBlock[tetrisBlockNumber].slice();
+            score = 0;
+            mode = MODE_GAME;
+          }
+        }
+      }
+
+      function onDraw() {
+        if (isInit == false) return;
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(0, 0, canvas.width - 1, canvas.height - 1);
+        ctx.fillStyle = '#fcfcfc';
+        ctx.fillRect(1, 1, canvas.width - 2, canvas.height - 2);
+        //블럭 표시
+        for (i = 0; i < 20; ++i) {
+          for (j = 0; j < 10; ++j) {
+            if (tetrisBlockBox[i][j] == 0) {
+              ctx.fillStyle = '#ccc';
+            } else {
+              ctx.fillStyle = 'green';
+            }
+            var size = tetrisBlockThis.length;
+            for (k = 0; k < size; k += 2) {
+              if (
+                tetrisBlockY + tetrisBlockThis[k] == i &&
+                tetrisBlockX + tetrisBlockThis[k + 1] == j
+              ) {
+                ctx.fillStyle = 'blue';
+              }
+            }
+            x = tetrisBlockLeft + j * tetrisBlockSize;
+            y = tetrisBlockTop + i * tetrisBlockSize;
+            ctx.fillRect(x, y, tetrisBlockSize - 2, tetrisBlockSize - 2);
+          }
+        }
+        //점수표시
+        ctx.font='30px 나눔고딕';
+        ctx.fillStyle = '#eee';
+        ctx.fillRect(10,60,250,40);
+        ctx.fillRect(10,120,250,40);
+        ctx.fillStyle = 'blue';
+        ctx.fillText('Score ' + score, 50, 90);
+        ctx.fillText('Level ' + level, 50, 150);
+        if (mode == MODE_GAMEOVER) {
+          ctx.fillStyle = 'red';
+          ctx.fillText('GAME OVER', tetrisBlockLeft + 40, tetrisBlockTop + 250);
+        }
+      }
+
+      document.onkeydown = function (e) {
+        e = e || window.event;
+        onKeyDown(e);
+      };
+
+      init();
+      setInterval(run, 100);
+    </script>
+  </body>
+</html>
