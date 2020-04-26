@@ -1,0 +1,41 @@
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>2048</title>
+    <style>
+        .table {
+            border-collapse: collapse;
+            user-select: none;
+        }
+        .table td {
+            border: 5px solid black;
+            width: 150px;
+            height: 150px;
+            font-size: 50px;
+            font-weight: bold;
+            text-align: center;
+        }
+        .table td.bg_2{background:rgb(223, 231, 255)}
+        .table td.bg_4{background:rgb(168, 212, 253)}
+        .table td.bg_8{background:rgb(124, 182, 248)}
+        .table td.bg_16{background:rgb(72, 157, 255)}
+        .table td.bg_32{background:rgb(32, 128, 255)}
+        .table td.bg_64{background:rgb(19, 102, 255)}
+        .table td.bg_128{background:rgb(0, 64, 255)}
+        .table td.bg_256{background:rgb(0, 45, 182); color:white}
+        .table td.bg_512{background:rgb(0, 35, 131); color:white}
+        .table td.bg_1024{background:rgb(0, 20, 78); color:white}
+        .table td.bg_2048{background:rgb(0, 0, 0); color:white}
+        .score {
+            user-select: none;
+        }
+    </style>
+</head>
+<body>
+<table id="table" class="table">
+
+</table>
+<div id="score" class="score">0</div>
+<script src="./2048.js"></script>
+</body>
+</html>
